@@ -1,0 +1,31 @@
+name: Publish (npm)
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: release
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+          cache: npm
+
+      # npm trusted publishing currently requires npm CLI >= 11.5.1.
+      - run: npm i -g npm@11.5.1
+
+      - run: npm ci
+      - run: npm run ci
+
+      - name: Publish
+        run: npm publish --provenance --access public

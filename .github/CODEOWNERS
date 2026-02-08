@@ -1,0 +1,7 @@
+# Default owners for everything in the repo.
+* @GonkaGate/cli-maintainers
+
+# Explicit paths (optional clarity).
+/docs/ @GonkaGate/cli-maintainers
+/src/ @GonkaGate/cli-maintainers
+

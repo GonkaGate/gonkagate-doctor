@@ -1,0 +1,82 @@
+name: Bug report
+description: Report a bug in the gonkagate CLI
+title: 'bug: '
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug.
+
+        Please do not include secrets (API keys, tokens) in any fields below.
+
+  - type: input
+    id: node_version
+    attributes:
+      label: Node.js version
+      description: Output of `node -v`
+      placeholder: 'v20.11.0'
+    validations:
+      required: true
+
+  - type: input
+    id: npm_version
+    attributes:
+      label: npm version
+      description: Output of `npm -v`
+      placeholder: '10.5.0'
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: OS
+      description: Your operating system
+      placeholder: 'macOS 14 / Ubuntu 22.04 / Windows 11'
+    validations:
+      required: true
+
+  - type: input
+    id: gonkagate_version
+    attributes:
+      label: gonkagate version
+      description: If installed from npm, specify the version. Otherwise say "from source".
+      placeholder: '0.1.0'
+    validations:
+      required: false
+
+  - type: textarea
+    id: command
+    attributes:
+      label: Command
+      description: The exact command you ran (redact secrets)
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What happened instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: output
+    attributes:
+      label: Output / logs
+      description: Include output (prefer `--json` output). Remove secrets.
+      render: text
+    validations:
+      required: false
