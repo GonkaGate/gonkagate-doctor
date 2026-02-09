@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.1](https://github.com/GonkaGate/gonkagate-doctor/compare/v0.2.0...v0.2.1) (2026-02-09)
+
+
+### Bug Fixes
+
+* prevent changelog from breaking prettier check ([fcdb79f](https://github.com/GonkaGate/gonkagate-doctor/commit/fcdb79f531747e6865757b476ea157ead9a4e651))
+* prevent changelog from breaking prettier check ([dcf9f11](https://github.com/GonkaGate/gonkagate-doctor/commit/dcf9f114972ba93a1b911842f245c5ff472f32af))
+
 ## [0.2.0](https://github.com/GonkaGate/gonkagate-doctor/compare/v0.1.0...v0.2.0) (2026-02-09)
 
 
