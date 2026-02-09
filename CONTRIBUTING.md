@@ -4,6 +4,9 @@ Thanks for contributing to **GonkaGate CLI** (`gonkagate`).
 
 This repo’s behavior is specified in `docs/prd.md` (source of truth). If your change affects UX/output/exit codes, update the PRD.
 
+- [Gonka AI API Docs (via GonkaGate)](https://gonkagate.com/en/docs)
+- [Gonka AI API Reference (via GonkaGate)](https://gonkagate.com/en/docs/api)
+
 ## Prerequisites
 
 - Node.js 20+

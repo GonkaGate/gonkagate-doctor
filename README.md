@@ -5,6 +5,13 @@
 
 Core command: `gonkagate doctor` (activation/diagnostics for an OpenAI-compatible API).
 
+## Documentation
+
+These docs cover **Gonka AI API access via the GonkaGate gateway** (GonkaGate is an independent gateway and is not affiliated with Gonka Network):
+
+- [Gonka AI API Docs (via GonkaGate)](https://gonkagate.com/en/docs)
+- [Gonka AI API Reference (via GonkaGate)](https://gonkagate.com/en/docs/api)
+
 ## Usage
 
 Once published to npm:

@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
+  - name: Documentation (Gonka AI API via GonkaGate)
+    url: https://gonkagate.com/en/docs
+    about: Gonka AI API docs and API reference (via GonkaGate).
   - name: Questions / Support
     url: https://github.com/GonkaGate/gonkagate-doctor/discussions
     about: Please use GitHub Discussions for questions and troubleshooting.
