@@ -22,7 +22,7 @@ jobs:
       # Tags/releases created by the default GITHUB_TOKEN do not trigger other workflows.
       # Dispatch the publish workflow explicitly when a release is tagged.
       - name: Trigger Publish (npm)
-        if: ${{ steps.release.outputs.release_created }}
+        if: ${{ steps.release.outputs.release_created == 'true' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           WORKFLOW_REF: ${{ github.ref_name }}
