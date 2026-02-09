@@ -1,0 +1,65 @@
+name: Publish (npm)
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      action:
+        description: What to do (check verifies OIDC without publishing)
+        required: true
+        type: choice
+        default: check
+        options:
+          - check
+          - publish
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: release
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+          cache: npm
+
+      # npm trusted publishing currently requires npm CLI >= 11.5.1.
+      - run: npm i -g npm@11.5.1
+
+      - run: npm ci
+      - run: npm run ci
+
+      # Verify that npm trusted publishing (OIDC) is configured correctly for this workflow.
+      # This does NOT publish anything.
+      - name: OIDC preflight (token exchange)
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          REG=$(npm -s config get registry || :)
+          REG=${REG%/}
+          : "${REG:=https://registry.npmjs.org}"
+
+          HOST=${REG#*://}
+          HOST=${HOST%%/*}
+
+          # Request the GitHub OIDC token with the npm audience.
+          ID=$(curl -fsS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=npm:${HOST}" | jq -er .value)
+
+          # Exchange the GitHub OIDC token with npm for this package.
+          PKG=$(jq -r '.name|@uri' package.json)
+          curl -fsS -H "Authorization: Bearer $ID" "$REG/-/npm/v1/oidc/token/exchange/package/$PKG" -d "" >/dev/null
+
+          echo "OK: OIDC exchange succeeded for $PKG on $HOST"
+
+      - name: Publish
+        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.action == 'publish')
+        run: npm publish --provenance --access public
