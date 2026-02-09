@@ -26,7 +26,7 @@ This causes extra iterations, support load, and slower **activation** (the first
 
 A CLI called **`gonkagate`** with a **`gonkagate doctor`** command that quickly and deterministically checks:
 
-1. the `base_url` is correct and the service responds,
+1. the official GonkaGate `base_url` responds (connectivity),
 2. the model exists (and suggests close matches),
 3. the pricing/rate endpoint is reachable,
 4. prints an **estimated cost per 1M tokens** (ideally split into network/platform/total).
@@ -73,7 +73,7 @@ All in one command to speed up activation and reduce support.
 ### MVP (required)
 
 1. **`gonkagate doctor`**
-   - validate `base_url`
+   - check official `base_url` connectivity
    - check `/health` reachability (if present)
    - check OpenAI-compatible endpoints: `/v1/models`, `/v1/chat/completions` (at least route-level reachability)
    - check that the model exists
@@ -83,7 +83,7 @@ All in one command to speed up activation and reduce support.
 2. **Good UX**
    - readable human output
    - `--json` mode (for CI/scripts)
-   - clear "how to fix" hints (e.g. "add `/v1` to base_url")
+   - clear "how to fix" hints (e.g. "use base_url=https://api.gonkagate.com/v1 in your OpenAI SDK")
 
 3. **Security**
    - never print API keys (mask only)
@@ -102,7 +102,7 @@ These commands would make the CLI a real "activation kit", but they should not b
 - `gonkagate models` - list models + pricing (helps pick a model; also needed for a public models page).
 - `gonkagate pricing --model ...` - print pricing breakdown.
 - `gonkagate whoami` - validate API key, show masked account + current balance (if an endpoint exists).
-- `gonkagate init` - create `.env`/config with `GONKAGATE_BASE_URL` and hints.
+- `gonkagate init` - create `.env`/config with hints.
 - `gonkagate doctor --smoke` - minimal real request `max_tokens=1` (end-to-end), if there is balance.
 - `gonkagate completion` - shell completions.
 
@@ -115,26 +115,26 @@ These commands would make the CLI a real "activation kit", but they should not b
 **Why:** the shortest path for an activation tool is one cross-platform command with no install step.
 
 - Run without install:
-  - `npx gonkagate@latest doctor --base-url ... --api-key ... --model ...`
+  - `npx gonkagate@latest doctor --api-key ... --model ...`
 
 - Optional global install:
   - `npm i -g gonkagate` -> `gonkagate doctor ...`
 
-This fits the product's "drop-in" philosophy (change base_url and it works).
+This fits the product's "drop-in" philosophy (set `base_url` in your OpenAI SDK and it works).
 
 ### Why not a Go/Rust binary (yet)
 
 Binaries are better UX, but cost more time: builds for 3 OSes, signing, Homebrew/Scoop distribution, update flow. Keep it for V1.1 once the CLI proves value.
 
-### Default base_url
+### Fixed base_url
 
 Product examples use:
 `https://api.gonkagate.com/v1`
 
 Doctor should:
 
-- use this as the default if not provided,
-- validate that base_url **includes `/v1`** (important for OpenAI SDK usage).
+- always use this base URL (CLI does not support overriding it),
+- print the recommended base_url for SDK usage (`.../v1` is important for OpenAI SDK compatibility).
 
 ---
 
@@ -148,16 +148,15 @@ Doctor should:
 
 ### Env vars (MVP)
 
-- `GONKAGATE_BASE_URL` (default: `https://api.gonkagate.com/v1`)
 - `GONKAGATE_API_KEY`
 - `GONKAGATE_MODEL` (optional default model)
 
 ### `doctor` options (MVP)
 
-- `--base-url <url>`
 - `--api-key <key>` (or env)
 - `--model <model_id>`
 - `--timeout <ms>` (default 10_000)
+- `--smoke` (optional) send a minimal real request (`max_tokens=1`)
 - `--json` (output result as JSON)
 - `--verbose` (print diagnostic details: timings, status codes, requestId)
 
@@ -165,17 +164,13 @@ Doctor should:
 
 ## 7) `gonkagate doctor`: behavior and checks
 
-### 7.1 base_url validation
+### 7.1 base_url
 
-**What a "valid base_url" means:**
+The CLI always uses the official base URL:
 
-- URL parses
-- `https://` (or warn explicitly on http)
-- path ends with `/v1` (or `/v1/`). If not, the CLI:
-  - attempts an "auto guess" (`+ /v1`)
-  - prints the recommended "correct" base_url
+- `base_url = https://api.gonkagate.com/v1`
 
-**Technical success signal:** a request to `${base_url}/models` returns **200** or **401** (endpoint exists), not 404/ENOTFOUND.
+Doctor should still print the base_url so users can copy it into their OpenAI SDK config, and it must verify that the service responds on `/v1/models` (200/401) rather than 404/ENOTFOUND.
 
 ### 7.2 Health check
 
@@ -283,7 +278,7 @@ Next:
 ### Exit codes
 
 - `0` - all checks passed
-- `2` - invalid args / invalid URL
+- `2` - invalid args
 - `10` - base_url unreachable (DNS/TLS/timeout)
 - `11` - auth error (401)
 - `12` - model not found
@@ -299,6 +294,7 @@ These materially improve activation and reduce support:
    Send a tiny request to `/v1/chat/completions` with `max_tokens=1` (and a neutral prompt) to validate end-to-end: auth -> routing -> response -> usage field. The backend is expected to return `usage` (token counts) and `cost_usd` in the response.
 
 - If the API returns 402 (empty balance), do not treat it as "broken"; print "SKIP: insufficient balance" (expected product case).
+- If the API returns 429 in OpenAI error format with `type=insufficient_quota` / `code=insufficient_quota`, do not treat it as "broken"; print "SKIP: insufficient balance" (expected product case). If available, include `metadata.balance_usd`.
 
 2. **"Diagnostic bundle" for support**
    A `--diagnostics` flag prints:
@@ -367,7 +363,7 @@ Important rule: **all user-facing values are in USD, no internal units**.
    - Mitigation: print "estimated" + `updatedAt`, avoid marketing like "X times cheaper".
 
 3. **Users forget `/v1` in base_url**
-   - Mitigation: auto-hint "you provided ..., you probably need .../v1" + examples in docs.
+   - Mitigation: doctor always prints the correct `base_url=https://api.gonkagate.com/v1` and docs include copy-paste examples for OpenAI SDK configuration.
 
 ---
 

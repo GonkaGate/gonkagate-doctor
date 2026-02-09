@@ -25,5 +25,5 @@ Commands and expected output:
 
 ```bash
 # example
-npm run dev -- doctor --base-url https://api.gonkagate.com/v1 --model <id>
+npm run dev -- doctor --model <id>
 ```

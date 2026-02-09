@@ -20,14 +20,14 @@ npm install
 Run from source:
 
 ```bash
-npm run dev -- doctor --base-url https://api.gonkagate.com/v1 --model <id>
+npm run dev -- doctor --model <id>
 ```
 
 Run the built CLI:
 
 ```bash
 npm run build
-npm start -- doctor --base-url https://api.gonkagate.com/v1 --model <id>
+npm start -- doctor --model <id>
 ```
 
 ## Quality Checks

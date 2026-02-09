@@ -13,7 +13,7 @@ export function normalizeBaseUrl(input: string | undefined): NormalizeBaseUrlRes
       ok: true,
       baseUrl: 'https://api.gonkagate.com/v1',
       origin: 'https://api.gonkagate.com',
-      warnings: ['baseUrl not provided; using default https://api.gonkagate.com/v1'],
+      warnings: [],
     };
   }
 
@@ -34,22 +34,22 @@ export function normalizeBaseUrl(input: string | undefined): NormalizeBaseUrlRes
     warnings.push(`unexpected protocol ${url.protocol}; https:// is recommended`);
   }
 
-  const origin = url.origin;
+  const originBase = url.origin;
   const pathname = url.pathname.replace(/\/+$/, '');
 
   if (pathname === '/v1') {
-    return { ok: true, baseUrl: `${origin}/v1`, origin, warnings };
+    return { ok: true, baseUrl: `${originBase}/v1`, origin: originBase, warnings };
   }
 
   // If the user already included a deeper path ending in /v1 (e.g. /proxy/v1), keep it.
   if (pathname.endsWith('/v1')) {
-    return { ok: true, baseUrl: `${origin}${pathname}`, origin, warnings };
+    const withoutV1 = pathname.slice(0, -3); // remove trailing "/v1"
+    const origin = `${originBase}${withoutV1}`;
+    return { ok: true, baseUrl: `${origin}/v1`, origin, warnings };
   }
 
-  const suggestedBaseUrl = `${origin}${pathname === '' ? '' : pathname}/v1`;
-  return {
-    ok: false,
-    error: 'baseUrl must end with /v1',
-    suggestedBaseUrl,
-  };
+  const origin = `${originBase}${pathname === '' ? '' : pathname}`;
+  const suggestedBaseUrl = `${origin}/v1`;
+  warnings.push(`baseUrl did not end with /v1; using ${suggestedBaseUrl}`);
+  return { ok: true, baseUrl: suggestedBaseUrl, origin, warnings };
 }

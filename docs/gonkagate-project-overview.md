@@ -75,8 +75,3 @@ The model is built around two sources:
 ## 10) North Star (vision)
 
 Make GonkaGate the payment and integration layer between traditional businesses and open (decentralized) AI infrastructure: Gonka Network, billed in USD.
-
-## 11) Related docs (this repo)
-
-- CLI behavioral spec (source of truth): `docs/prd.md`
-- Getting started: `README.md`

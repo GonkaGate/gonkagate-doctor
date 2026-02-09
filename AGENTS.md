@@ -47,10 +47,10 @@ Standard scripts (see `package.json`):
 
 Common examples:
 
-- `npm run dev -- doctor --base-url https://api.gonkagate.com/v1 --model <id>`
-- `npm run dev -- doctor --base-url https://api.gonkagate.com/v1 --model <id> --json`
+- `npm run dev -- doctor --model <id>`
+- `npm run dev -- doctor --model <id> --json`
 
-Distribution sanity check (from the PRD): `npx gonkagate@latest doctor --base-url https://api.gonkagate.com/v1 --model <id>`.
+Distribution sanity check (from the PRD): `npx gonkagate@latest doctor --model <id>`.
 
 ## Coding Style & Naming Conventions
 
@@ -72,5 +72,6 @@ Distribution sanity check (from the PRD): `npx gonkagate@latest doctor --base-ur
 
 ## Security & Configuration Tips
 
-- Prefer env vars for local config: `GONKAGATE_BASE_URL`, `GONKAGATE_API_KEY`, `GONKAGATE_MODEL`.
+- The CLI base URL is fixed to `https://api.gonkagate.com/v1`.
+- Prefer env vars for local config: `GONKAGATE_API_KEY`, `GONKAGATE_MODEL`.
 - Do not commit local secrets. `.env` is already ignored in `.gitignore`.
