@@ -14,6 +14,11 @@ on:
         options:
           - check
           - publish
+      publish_ref:
+        description: Git ref to publish (e.g. tag v0.2.1). Leave empty to publish the workflow ref.
+        required: false
+        type: string
+        default: ''
 
 permissions:
   contents: read
@@ -24,7 +29,11 @@ jobs:
     runs-on: ubuntu-latest
     environment: release
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # When running manually, allow publishing a specific tag/commit while keeping the workflow on `main`.
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.publish_ref != '' && github.event.inputs.publish_ref || github.ref }}
       - uses: actions/setup-node@v6
         with:
           node-version: 22
@@ -61,5 +70,5 @@ jobs:
           echo "OK: OIDC exchange succeeded for $PKG on $HOST"
 
       - name: Publish
-        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.action == 'publish')
+        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'publish')
         run: npm publish --provenance --access public
