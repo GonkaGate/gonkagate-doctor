@@ -41,6 +41,10 @@ Then set `GONKAGATE_API_KEY` (and optionally `GONKAGATE_MODEL`) in `.env` and ru
 gonkagate doctor --model <id>
 ```
 
+The template names no model: model ids, display names and context windows are not fixed in this CLI,
+they come from the live catalog. Run `gonkagate models` for the current catalog with pricing; the
+first model it lists is the default.
+
 ## Development
 
 Requirements: Node.js 20+.
@@ -67,7 +71,7 @@ npm start -- doctor --model <id>
 ## Env Vars
 
 - `GONKAGATE_API_KEY`
-- `GONKAGATE_MODEL`
+- `GONKAGATE_MODEL` (optional; run `gonkagate models` for the available ids)
 
 The CLI base URL is fixed to `https://api.gonkagate.com/v1`.
 
@@ -97,18 +101,27 @@ Options:
 
 ### `models`
 
-List models and attach pricing (joined by model id).
+List models and attach pricing (joined by model id). `GET /v1/models` is the source of truth for the
+catalog: ids, display names, descriptions and context windows are read from the response, never from
+a list baked into this CLI.
 
 ```bash
 gonkagate models --api-key gp-REDACTED
 ```
+
+The first model in the response is the default; it is printed as `Default model: <id>` and exposed as
+`defaultModel` in `--json`. There is no client-side ranking.
+
+Gateways that do not publish the enriched fields yet are supported: a missing or `null` context window
+prints `n/a` and is omitted from `--json`, a missing display name leaves the model listed by its id,
+and a missing description is omitted.
 
 Options:
 
 - `--api-key <key>`
 - `--timeout <ms>` (default: `10000`)
 - `--json`
-- `--verbose`
+- `--verbose` also print each model's display name and description when the gateway provides them
 
 ### `pricing`
 
@@ -148,6 +161,9 @@ Create a local `.env` template with usage hints:
 ```bash
 gonkagate init
 ```
+
+`init` runs before an API key exists, so it cannot read the catalog and does not guess: it leaves
+`GONKAGATE_MODEL` commented and unset and points at `gonkagate models`.
 
 Options:
 
