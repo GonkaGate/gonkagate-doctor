@@ -10,7 +10,13 @@ type ModelInfo = {
   contextLength?: number;
 };
 
-type ModelsListParseResult = { ok: true; models: ModelInfo[] } | { ok: false; error: string };
+/**
+ * A successful parse always carries at least one model, so the first entry -
+ * the default - is always available without an extra emptiness check.
+ */
+type ModelsListParseResult =
+  | { ok: true; models: [ModelInfo, ...ModelInfo[]] }
+  | { ok: false; error: string };
 
 function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null;
@@ -24,6 +30,16 @@ function asNumber(v: unknown): number | undefined {
   return typeof v === 'number' && Number.isFinite(v) ? v : undefined;
 }
 
+/**
+ * Parses `GET /v1/models`, which is the only source of truth for model ids and
+ * their metadata. Nothing about the catalog is hardcoded here.
+ *
+ * Only `id` is required. `name`, `description` and the context window are
+ * enrichment fields that older gateways do not send at all and newer ones may
+ * send as `null`; each is simply omitted when absent, never defaulted to a
+ * placeholder value. The context window is read from both `context_length` and
+ * `contextLength` so either spelling is accepted.
+ */
 function parseModelsList(body: unknown): ModelsListParseResult {
   if (!isRecord(body)) return { ok: false, error: 'models response is not an object' };
   const data = body.data;
@@ -47,16 +63,29 @@ function parseModelsList(body: unknown): ModelsListParseResult {
     });
   }
 
-  if (models.length === 0) return { ok: false, error: 'models list is empty or has no ids' };
-  return { ok: true, models };
+  const [first, ...rest] = models;
+  if (!first) return { ok: false, error: 'models list is empty or has no ids' };
+  return { ok: true, models: [first, ...rest] };
 }
 
 function padRight(s: string, n: number): string {
   return s.length >= n ? s : s + ' '.repeat(n - s.length);
 }
 
+function padLeft(s: string, n: number): string {
+  return s.length >= n ? s : ' '.repeat(n - s.length) + s;
+}
+
 function formatMoney6(n: number): string {
   return `$${n.toFixed(6)}`;
+}
+
+/**
+ * Renders the live context window. Gateways that do not publish one get `n/a`;
+ * the CLI never substitutes a guessed limit.
+ */
+function formatContextLength(n: number | undefined): string {
+  return n === undefined ? 'n/a' : String(n);
 }
 
 function truncateMiddle(s: string, max: number): string {
@@ -223,12 +252,17 @@ export async function models(args: ModelsArgs): Promise<number> {
   const ok = pricingOk;
   const exitCode = ok ? 0 : 13;
 
+  // The default model is positional: whatever the live catalog returns first.
+  // Response order is preserved end to end; there is no client-side ranking.
+  const defaultModel = parsedModels.models[0].id;
+
   if (args.json) {
     writeJsonValue({
       ok,
       baseUrl,
       warnings: normalized.warnings,
       pricingUpdatedAt: pricingIndex?.updatedAt,
+      defaultModel,
       models: outModels,
       ...(ok
         ? {}
@@ -257,21 +291,25 @@ export async function models(args: ModelsArgs): Promise<number> {
     if (pricingIndex?.updatedAt)
       process.stdout.write(`Pricing updatedAt: ${pricingIndex.updatedAt}\n\n`);
 
+    process.stdout.write(`Default model: ${defaultModel} (first entry returned by /v1/models)\n\n`);
+
     const idWidth = Math.min(60, Math.max(24, ...outModels.map((m) => m.id.length)));
     process.stdout.write(
-      `${padRight('model', idWidth)}  ${padRight('network/1M', 12)}  ${padRight('fee/1M', 12)}  ${padRight('total/1M', 12)}\n`,
+      `${padRight('model', idWidth)}  ${padLeft('context', 10)}  ${padRight('network/1M', 12)}  ${padRight('fee/1M', 12)}  ${padRight('total/1M', 12)}\n`,
     );
 
     for (const m of outModels) {
       const p = m.pricing;
       const row = [
         padRight(truncateMiddle(m.id, idWidth), idWidth),
+        padLeft(formatContextLength(m.contextLength), 10),
         padRight(p ? formatMoney6(p.networkUsdPer1M) : 'n/a', 12),
         padRight(p ? formatMoney6(p.platformUsdPer1M) : 'n/a', 12),
         padRight(p ? formatMoney6(p.totalUsdPer1M) : 'n/a', 12),
       ].join('  ');
       process.stdout.write(row.trimEnd() + '\n');
       if (args.verbose && m.name) process.stdout.write(`  name: ${m.name}\n`);
+      if (args.verbose && m.description) process.stdout.write(`  description: ${m.description}\n`);
     }
 
     if (!pricingOk) {
