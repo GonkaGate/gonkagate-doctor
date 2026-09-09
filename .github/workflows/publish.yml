@@ -30,7 +30,7 @@ jobs:
     environment: release
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           # When running manually, allow publishing a specific tag/commit while keeping the workflow on `main`.
           ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.publish_ref != '' && github.event.inputs.publish_ref || github.ref }}

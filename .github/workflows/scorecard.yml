@@ -16,7 +16,7 @@ jobs:
       security-events: write
       id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Run scorecard
         uses: ossf/scorecard-action@v2
         with:
