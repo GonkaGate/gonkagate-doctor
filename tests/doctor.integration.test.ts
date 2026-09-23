@@ -551,7 +551,6 @@ describe('doctor (integration)', () => {
               type: 'insufficient_quota',
               code: 'insufficient_quota',
               param: null,
-              metadata: { balance_usd: '0.00', estimated_cost_usd: '0.000011' },
             },
           }),
         );
@@ -574,7 +573,7 @@ describe('doctor (integration)', () => {
       if (!chat) throw new Error('missing chatCompletions check');
       expect(chat.ok).toBe(true);
       expect(chat.skipped).toBe(true);
-      expect(chat.hint ?? '').toMatch('balance');
+      expect(chat.hint).toBe('insufficient balance (insufficient_quota)');
     } finally {
       await server.close();
     }

@@ -237,12 +237,7 @@ export async function doctor(args: DoctorArgs): Promise<number> {
       smokeSkippedInsufficientQuota = true;
       chatCheck.ok = true;
       chatCheck.skipped = true;
-      const err = parseOpenAiError(chatBody);
-      const balance = err?.metadata?.balance_usd;
-      chatCheck.hint =
-        typeof balance === 'string'
-          ? `insufficient balance (balance_usd=${balance})`
-          : 'insufficient balance (insufficient_quota)';
+      chatCheck.hint = 'insufficient balance (insufficient_quota)';
     } else {
       smokeFailed = true;
       const err = formatOpenAiError(parseOpenAiError(chatBody));
